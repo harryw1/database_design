@@ -1,3 +1,7 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by Harrison Weiss
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
+
 import psycopg2
 import sys
 from urllib.parse import urlparse, uses_netloc
