@@ -5,7 +5,8 @@ uses_netloc.append("postgres")
 
 ##############################################################################
 # You need to change the line below to use your own connection string!!!
-url = urlparse("postgres://username:password@host:port/database")
+url = urlparse(
+    "postgres://jzodzvlj:j5LSIIzVVuKtJM87N9tdmCcditjMOnm2@isilo.db.elephantsql.com:5432/jzodzvlj")
 ##############################################################################
 
 
@@ -52,7 +53,7 @@ def insert_model(cursor, number, speed, ram, hd, price, manufacturerId):
 with psycopg2.connect(database=url.path[1:], user=url.username, password=url.password, host=url.hostname, port=url.port) as conn:
     with conn.cursor() as cursor:
         cursor.execute(
-            'drop table Orders; drop table Customers; drop table machines; drop table models; drop table manufacturers;')
+            'drop table if exists Orders; drop table if exists Customers; drop table if exists machines; drop table if exists models; drop table if exists manufacturers;')
         cursor.execute(
             'create table Orders (number serial NOT NULL PRIMARY KEY, customerId int, serialNumber int)')
         cursor.execute(
