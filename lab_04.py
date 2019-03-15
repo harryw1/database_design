@@ -36,7 +36,11 @@ with psycopg2.connect(database=url.path[1:], user=url.username, password=url.pas
             cursor.execute('Select * from Customers')
             for customer in cursor:
                 existing_ids.append(customer[0])
-            id_from_user = int(input("Please enter a user id: "))
+            print()
+            id_from_user = int(input("Please enter a user id (-1 to exit): "))
+            if id_from_user == -1:
+                print('Program exiting.')
+                sys.exit(0)
             if id_from_user not in existing_ids:
                 print("User ID does not exist. Exiting.")
                 sys.exit(1)
@@ -49,32 +53,32 @@ with psycopg2.connect(database=url.path[1:], user=url.username, password=url.pas
             the serial #, price, and manufacturer
             for each purchased item by that customer
             """
+            totals = list()
             cursor.execute(
-                'Select * from Orders where CustomerID = %s',
+                'Select o.serialnumber, m.price, m.ManufacturerID \
+                    from Orders o \
+                        join machines ma on o.serialnumber = ma.serialnumber \
+                        join models m on ma.modelnumber = m.id \
+                        where o.customerid = %s',
                 (id, )
             )
+            totals.append(cursor.rowcount)
             item = cursor.fetchone()
             while item != None:
-                print(f' {item[0]:5}       {item[1]:5d}           {item[2]:5}   ')
+                print(f'    {item[0]:5}      {item[1]:5}            {item[2]}')
                 item = cursor.fetchone()
-        
-        def get_machines_info(id):
-            """
-            Using the user ID we got from
-            the terminal, we are going to 
-            return the total number of mahcines
-            purchased by that user
-            """
-            machine_info = list()
+            print('---------------------------------------------------------')
             cursor.execute(
-                'Select * from Orders where CustomerID = %s;',
-                (id, ))
-            machine_info.append(cursor.rowcount)
-            cursor.execute(
-                'Select Sum(Price) from Model m Join Orders o on \
-                    m.ID = o.SerialNumber where o.CustomerID = %s',
-                (id, ))
-            machine_info.append(cursor.fetchone())
+                'Select SUM(m.price)\
+                    from Orders o \
+                        join machines ma on o.serialnumber = ma.serialnumber \
+                        join models m on ma.modelnumber = m.id \
+                        where o.customerid = %s',
+                (id, )
+            )
+            totals.append(cursor.fetchone())
+            print(f'Total number of machines purchased:        {totals[0]}')
+            print(f'Total cost of purchases:              {totals[1][0]:5}')
 
         print_customers()
         print("~~~~~~~~~~~~~")
@@ -83,6 +87,7 @@ with psycopg2.connect(database=url.path[1:], user=url.username, password=url.pas
 
             print()
             print('----- Purchase History ----------------------------------')
-            print('{0:5} {1:5} {2:5}'.format('  Serial #  |', '  Price  |', '   Manufacturer'))
+            print('{0:5} {1:5} {2:5}'.format(
+                '  Serial #  |', '  Price  |', '   Manufacturer'))
             print('---------------------------------------------------------')
-            print(purchase_history(id_from_user))
+            purchase_history(id_from_user)
