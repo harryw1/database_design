@@ -24,10 +24,10 @@ orders.append({'id': 2, 'customerId': 0, 'productId': 2, 'date': "2019-10-18"})
 orders.append({'id': 3, 'customerId': 1, 'productId': 0, 'date': "2011-03-30"})
 orders.append({'id': 4, 'customerId': 0, 'productId': 1, 'date': "2017-09-01"})
 orders.append({'id': 5, 'customerId': 1, 'productId': 2, 'date': "2017-12-17"})
-
-
 ################################################################################
 # The following three functions are only for mocking data - they should be removed,
+
+
 def _find_by_id(things, id):
     results = [thing for thing in things if thing['id'] == id]
     if (len(results) > 0):
@@ -57,22 +57,42 @@ def _delete_by_id(things, id):
 # with the appropriate code to interact with your PostgreSQL database.
 
 def initialize():
-    # this function will get called once, when the application starts.
-    # this would be a good place to initalize your connection!
-	config = configparser.ConfigParser()
-	config.read('config.ini')
-	connection_string = config['database']['postgres_connection']
-	conn = connect_to_db(connection_string)
+        with conn.cursor() as cursor:
+                cursor.execute('create table if not exists Customers(id serial primary key, first_name text, last_name text, street text, city text, state text, zip text);')
+                cursor.execute('create table if not exists Products(id serial primary key, name text, price real);')
+                cursor.execute('create table if not exists Orders(id serial primary key, customer_id int, product_id int, foreign key(customer_id) \
+                        references Customers(id) on delete cascade, \
+                        foreign key (product_id) references Products(id) on delete cascade, \
+                        date date);')
+        conn.commit()
 
 def get_customers():
-    return customers
-
+        """
+        Returns all of the customers
+        in the database
+        """
+        with conn.cursor() as cursor:
+                cursor.execute('select * from customers')
+                for d in cursor.fetchall():
+                        yield d
 
 def get_customer(id):
-    return _find_by_id(customers, id)
-
+        """
+        Returns a single customer from the
+        the customers table in the database
+        """
+        with conn.cursor as cursor:
+                cursor.execute('select * from customers where Customers.id = %s', (id))
+                cursor.fetchone()
 
 def upsert_customer(customer):
+        customer_info = list(customer.values())
+        with conn.cursor() as cursor:
+                if 'id' in customer.keys(): # if the customer already exists in the database
+                        customer_info.append(customer_info[0])
+                        customer_info.pop(0)
+                        cursor.execute("update customers set first_name = %s, last_name = %s,\
+                                street = %s, city = %s, state = %s, zip = %s where Customers.id = %s", (customer_info))
     _upsert_by_id(customers, customer)
 
 
@@ -81,11 +101,14 @@ def delete_customer(id):
 
 
 def get_products():
-    return products
-
+        with conn.cursor() as cursor:
+                cursor.execute('select * from Products')
+                for d in cursor.fetchall():
+                        yield d
 
 def get_product(id):
-    return _find_by_id(products, id)
+        with conn.cursor() as cursor:
+                cursor.execute('select * from Products where Product.id = %s', (id))
 
 
 def upsert_product(product):
@@ -119,10 +142,10 @@ def delete_order(id):
 
 
 def customer_report(id):
-    customer = _find_by_id(customers, id)
-    orders = get_orders()
-    customer['orders'] = [o for o in orders if o['customerId'] == id]
-    return customer
+        customer = _find_by_id(customers, id)
+        orders = get_orders()
+        customer['orders'] = [o for o in orders if o['customerId'] == id]
+        return customer
 
 # Return a list of products.  For each product, build
 # create and populate a last_order_date, total_sales, and
@@ -141,14 +164,20 @@ def sales_report():
         product['gross_revenue'] = product['price'] * product['total_sales']
     return products
 
+
 def connect_to_db(conn_str):
-    uses_netloc.append("postgres")
-    url = urlparse(conn_str)
+        uses_netloc.append("postgres")
+        url = urlparse(conn_str)
 
-    conn = psycopg2.connect(database=url.path[1:],
-        user=url.username,
-        password=url.password,
-        host=url.hostname,
-        port=url.port)
+        conn = psycopg2.connect(database=url.path[1:],
+                                user=url.username,
+                                password=url.password,
+                                host=url.hostname,
+                                port=url.port)
 
-    return conn
+        return conn
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+connection_string = config['database']['postgres_connection']
+conn = connect_to_db(connection_string)
