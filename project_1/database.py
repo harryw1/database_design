@@ -70,9 +70,9 @@ def upsert_customer(customer):
             cursor.execute('insert into customers (firstName, lastName, street, \
                             city, state, zip) values (%s, %s, %s, %s, %s, %s)', (customer_info))
         else:
-            customer_info.append(customer_info['id'])
+            customer_info.append(customer['id'])
             cursor.execute('update customers set firstName = %s, lastName = %s, street = %s, \
-                            city = %s, statte = %s, zip = %s where customers.id = %s', (customer_info))
+                            city = %s, state = %s, zip = %s where customers.id = %s', (customer_info))
     conn.commit()
 
 
@@ -170,4 +170,4 @@ def sales_report():
                         orders.productId = products.id group by products.id')
         for d in cursor:
             yield {'name': d[0], 'gross_revenue': d[1],
-                   'total_sales': d[2], 'recent_order_date': d[3]}
+                   'total_sales': d[2], 'last_order_date': d[3]}
