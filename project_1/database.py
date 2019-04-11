@@ -5,11 +5,6 @@ import csv
 
 from urllib.parse import urlparse, uses_netloc
 
-#######
-# Needed to use cursor_factory RealDictCursor to extract
-# dictionary objects from the cursor
-#######
-
 """
 Connects to the database - don't change
 """
@@ -65,7 +60,8 @@ def get_customer(id):
 
 def upsert_customer(customer):
     with conn.cursor() as cursor:
-        customer_info = [customer['firstName'], customer['lastName'], customer['street'], customer['city'], customer['state'], customer['zip']]
+        customer_info = [customer['firstName'], customer['lastName'], customer['street'],
+                         customer['city'], customer['state'], customer['zip']]
         if 'id' not in customer.keys():
             cursor.execute('insert into customers (firstName, lastName, street, \
                             city, state, zip) values (%s, %s, %s, %s, %s, %s)', (customer_info))
@@ -91,7 +87,7 @@ def get_products():
 
 def get_product(id):
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-        cursor.execute('select * from products where product.id = %s', [id])
+        cursor.execute('select * from products where products.id = %s', [id])
         return cursor.fetchone()
 
 
@@ -99,12 +95,11 @@ def upsert_product(product):
     with conn.cursor() as cursor:
         product_info = [product['name'], product['price']]
         if 'id' not in product.keys():
-            cursor.execute(
-                'insert into products (name, price) values (%s, %s)', (product_info))
+            cursor.execute('insert into products (name, price) values (%s, %s)', (product_info))
         else:
             product_info.append(product['id'])
             cursor.execute('update products set name = %s, price = %s \
-                where products.id = %s', (product_info))
+                            where products.id = %s', (product_info))
     conn.commit()
 
 
@@ -119,7 +114,7 @@ def get_orders():
         cursor.execute('select * from orders')
         for d in cursor:
             d['customer'] = get_customer(d['customerid'])
-            d['product'] = get_customer(d['productid'])
+            d['product'] = get_product(d['productid'])
             yield d
 
 
@@ -128,17 +123,18 @@ def get_order(id):
         cursor.execute('select * from orders where order.id = %s', [id])
         return cursor.fetchone()
 
+
 def upsert_order(order):
     with conn.cursor() as cursor:
         order_info = [order['customerId'], order['productId'],
                       order['date']]
         if 'id' not in order.keys():
             cursor.execute('insert into orders (customerId, productId, date) \
-                values (%s, %s, %s)', (order_info))
+                            values (%s, %s, %s)', (order_info))
         else:
             order_info.append(order_info['id'])
             cursor.execute('update orders set customerId = %s, productId = %s, \
-                date = %s where orders.id = %s', (order_info))
+                            date = %s where orders.id = %s', (order_info))
         conn.commit()
 
 
@@ -153,13 +149,11 @@ def customer_report(id):
     customer['orders'] = list()
 
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-        cursor.execute(
-            'select * from orders where orders.customerId = %s', [id])
+        cursor.execute('select * from orders where orders.customerId = %s', [id])
         for d in cursor:
-            d['product'] = get_product(d['productId'])
+            d['product'] = get_product(d['productid'])
             customer['orders'].append(d)
     return customer
-
 
 
 def sales_report():
