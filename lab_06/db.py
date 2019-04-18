@@ -42,7 +42,7 @@ def seed_database():
             add_ship(d)
 
 
-class_keys = ('class', 'type', 'country', 'guns', 'bore', 'displacement')
+class_keys = ('class', 'type', 'country', 'numGuns', 'bore', 'displacement')
 ship_keys = ('class', 'name', 'launched')
 
 
@@ -69,28 +69,26 @@ def get_ships(class_name):
         for item in ships.find({}):
             yield to_list(ship_keys, item)
     else:
-        return None
-        # matching_ships = ships.find({"class": class_name})
-        # for item in matching_ships:
-        #     yield to_list(ship_keys, item)
+        matching_ships = ships.find({'class': class_name})
+        for item in matching_ships:
+            yield to_list(ship_keys, item)
 
 
 def add_class(data):
-    classes.insert_many({"class": data[0], "type": data[1], "country": data[2],
-                         "numGuns": data[3], "bore": data[4], "displacement": data[5]})
+    classes.insert({'class': data[0], 'type': data[1], 'country': data[2], 'numGuns': data[3], 'bore': data[4], 'displacement': data[5]})
 
 
 def add_ship(data):
-    ships.insert_many({"name": data[0], "class": data[1], "launched": data[2]})
+    ships.insert({'name': data[0], 'class': data[1], 'launched': data[2]})
 
 
 def delete_class(class_name):
-    ships.delete_many({"class": class_name})
-    classes.delete_one({"class": class_name})
+    ships.delete_many({'class': class_name})
+    classes.delete_one({'class': class_name})
 
 
 def delete_ship(ship_name, class_name):
-    ships.delete_one({"name": ship_name, "class": class_name})
+    ships.delete_one({'name': ship_name, 'class': class_name})
 
 
 def connect_to_db(conn_str):

@@ -38,7 +38,7 @@ def print_ship(ship):
     print(ship[0].ljust(15), end='\t')
     print(ship[1].ljust(15), end='\t')
     print(str(ship[2]).ljust(10), end='\t')
-    # print(ship[5].ljust(15), end='\t')
+    print(ship[5].ljust(15), end='\t')
     print()
 
 
@@ -66,7 +66,7 @@ def ship_header():
     print('Class'.ljust(15), end='\t')
     print('Name'.ljust(15), end='\t')
     print('Launched'.ljust(10), end='\t')
-    # print('Country'.ljust(10), end='\t')
+    print('Country'.ljust(10), end='\t')
     print('\n-------------------------------------------------------------')
 
 
