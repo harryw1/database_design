@@ -65,21 +65,26 @@ def get_classes():
 
 
 def get_ships(class_name):
-    if not class_name:
-        for item in ships.find({}):
-            yield to_list(ship_keys, item)
-    else:
-        matching_ships = ships.find({'class': class_name})
-        for item in matching_ships:
-            yield to_list(ship_keys, item)
+    query = {}
+
+    if class_name:
+        query = {"class": class_name}
+
+    for s in ships.find(query):
+        for c in classes.find({}):
+            if s["class"] == c["class"]:
+                break
+
+        yield join(class_keys, c, to_list(ship_keys, s))
 
 
 def add_class(data):
-    classes.insert({'class': data[0], 'type': data[1], 'country': data[2], 'numGuns': data[3], 'bore': data[4], 'displacement': data[5]})
+    classes.insert_one({'class': data[0], 'type': data[1], 'country': data[2],
+                        'numGuns': data[3], 'bore': data[4], 'displacement': data[5]})
 
 
 def add_ship(data):
-    ships.insert({'name': data[0], 'class': data[1], 'launched': data[2]})
+    ships.insert_one({'name': data[0], 'class': data[1], 'launched': data[2]})
 
 
 def delete_class(class_name):
